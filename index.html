@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>最终幻想14 · 宠物匹配度测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* 避免拖动干扰，不影响文字选择 */
+        }
+
+        body {
+            background: linear-gradient(145deg, #1a2a2f 0%, #0e1a1f 100%);
+            font-family: 'Segoe UI', 'Roboto', 'Noto Sans', system-ui, -apple-system, 'BlinkMacSystemFont', 'Helvetica Neue', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* 主卡片 */
+        .test-container {
+            max-width: 680px;
+            width: 100%;
+            background: #fef7e8;
+            background-image: radial-gradient(circle at 10% 30%, rgba(255,245,215,0.6) 2%, transparent 2.5%);
+            background-size: 28px 28px;
+            border-radius: 48px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,240,0.6);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        /* 内边距统一 */
+        .card-panel {
+            padding: 32px 28px 38px;
+        }
+
+        /* 开始界面 */
+        .start-screen {
+            text-align: center;
+        }
+
+        .start-screen h1 {
+            font-size: 2rem;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #D9B48B, #AA7A5C);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .start-screen p {
+            color: #3e2a24;
+            font-size: 1rem;
+            margin: 16px 0 28px;
+            background: #f3ebd2;
+            padding: 12px 16px;
+            border-radius: 60px;
+            display: inline-block;
+            backdrop-filter: blur(2px);
+        }
+
+        .ffxiv-icon {
+            font-size: 4rem;
+            margin: 15px 0 5px;
+            filter: drop-shadow(2px 4px 10px rgba(0,0,0,0.2));
+        }
+
+        .btn {
+            background: #5f3b2c;
+            border: none;
+            padding: 12px 32px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffefcf;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 5px 0 #331f16;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: #b87c4f;
+            color: #24140e;
+            box-shadow: 0 5px 0 #6e3f28;
+        }
+
+        .btn-primary:hover {
+            background: #cb9468;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 0 #6e3f28;
+        }
+
+        .btn-secondary {
+            background: #5f6f5c;
+            box-shadow: 0 5px 0 #3c453a;
+        }
+
+        .btn-secondary:hover {
+            background: #7a8d76;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #331f16;
+        }
+
+        /* 问卷头部 */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 24px;
+            border-bottom: 2px dashed #e2cfaa;
+            padding-bottom: 12px;
+        }
+
+        .question-counter {
+            background: #dac294;
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-weight: bold;
+            color: #2d2b1f;
+            font-size: 0.85rem;
+        }
+
+        .progress-txt {
+            font-size: 0.85rem;
+            color: #876b4f;
+            font-weight: 500;
+        }
+
+        .question-text {
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: #352418;
+            margin-bottom: 28px;
+            line-height: 1.3;
+            padding-right: 5px;
+        }
+
+        /* 选项样式 */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 40px;
+        }
+
+        .option-item {
+            background: #fff5e6;
+            border: 1.5px solid #eedbba;
+            border-radius: 100px;
+            transition: all 0.15s;
+            cursor: pointer;
+        }
+
+        .option-item:hover {
+            background: #ffe5cb;
+            border-color: #c3a07e;
+            transform: translateX(4px);
+        }
+
+        .option-radio {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            gap: 14px;
+            cursor: pointer;
+        }
+
+        .option-radio input {
+            width: 20px;
+            height: 20px;
+            accent-color: #b46f3a;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .option-radio label {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #3d2c20;
+            line-height: 1.4;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        /* 导航按钮组 */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-buttons .btn {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            flex: 1;
+            text-align: center;
+        }
+
+        .result-area {
+            margin-top: 30px;
+            background: #eadbbc;
+            border-radius: 48px;
+            padding: 18px 22px;
+            text-align: center;
+            border: 1px solid #fff0cf;
+            box-shadow: inset 0 0 0 1px #fef2df, 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        .result-pet {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(120deg, #3e2b1d, #8b5a3a);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 8px 0;
+        }
+
+        .reset-btn {
+            background: #886e4e;
+            box-shadow: 0 4px 0 #5a3e2a;
+            margin-top: 12px;
+            display: inline-block;
+        }
+
+        .error-msg {
+            color: #b13e3e;
+            background: #ffe1cf;
+            border-radius: 28px;
+            padding: 8px 12px;
+            margin-top: 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        footer {
+            font-size: 0.7rem;
+            text-align: center;
+            padding: 16px 20px 20px;
+            color: #b29174;
+            background: #f3ecdb;
+            border-top: 1px solid #e8dcc8;
+        }
+
+        @media (max-width: 550px) {
+            .card-panel {
+                padding: 24px 20px 30px;
+            }
+            .question-text {
+                font-size: 1.3rem;
+            }
+            .option-radio label {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="test-container" id="app">
+    <!-- 动态渲染区域 -->
+    <div id="dynamic-content"></div>
+</div>
+
+<script>
+    // ----------------------------- 宠物数据 (a~p) -----------------------------
+    const PETS = {
+        a: "邮差莫古力娃娃", b: "隆卡的水蛇？", c: "蟹蟹", d: "海月水母",
+        e: "蓝闪蝶", f: "食花果鼠", g: "椒盐海豹", h: "丑小鸭",
+        i: "鲨鱼指挥官", j: "擦擦羽衣精", k: "水小滴", l: "猫小胖",
+        m: "仙子猪", n: "豆豆柴", o: "小甚平", p: "迷你陆行鸟"
+    };
+
+    // ---------- 十道题的完整内容 (题干 + 选项文本) ----------
+    const QUESTIONS = [
+        {
+            text: "这是今天你第一次打开ff14，你最先想做的事情是？",
+            options: [
+                "A. 我是豆芽，我决定立刻跑主线",
+                "B. 月卡不挂机，等于没月卡",
+                "C. 假装挂机偷看海都潮人铭牌",
+                "D. 高难固定队上班"
+            ]
+        },
+        {
+            text: "如果你的宠物变成了队友，你希望它是？",
+            options: [
+                "A. 防护T，懂事的宠物会帮我承伤",
+                "B. 治疗H，懂事的宠物会给我加血",
+                "C. 输出D，来当我的舞伴吧！/ac 闭式舞姿",
+                "D. 踢出队伍不解释"
+            ]
+        },
+        {
+            text: "如果你的宠物出现在现实里，你会？",
+            options: [
+                "A. 好萌，给我rua一下！",
+                "B. 尖叫着跑开",
+                "C. 鱼离开了水能活多久（接水）（找鱼缸）",
+                "D. 放生，回归自然"
+            ]
+        },
+        {
+            text: "你对“可爱的宠物”的定义更接近以下哪个？",
+            options: [
+                "A. 毛茸茸库啵",
+                "B. 肥嘟嘟，圆滚滚",
+                "C. 没有五官的比较可爱",
+                "D. 奇特怪异有点丑萌"
+            ]
+        },
+        {
+            text: "以下地点中你最喜欢哪一个？",
+            options: [
+                "A. 车水马龙人头攒动的主城",
+                "B. 尘封秘岩",
+                "C. 精装修封顶L房",
+                "D. 野外小众挂机点"
+            ]
+        },
+        {
+            text: "你更倾向于哪种社交方式？",
+            options: [
+                "A. 海都/住宅区挂机，和朋友聊天",
+                "B. 组队打副本，培养默契",
+                "C. 挂招募版，等待别人主动",
+                "D. 金蝶游乐场走起"
+            ]
+        },
+        {
+            text: "如果给你一项特殊能力，你会选？",
+            options: [
+                "A. 我要飞起来",
+                "B. 学会隐身",
+                "C. 读心术",
+                "D. 在水下呼吸"
+            ]
+        },
+        {
+            text: "你更偏爱哪种色调？",
+            options: [
+                "A. 暖色系",
+                "B. 冷色系",
+                "C. 大地色系",
+                "D. 霓虹/金属色系"
+            ]
+        },
+        {
+            text: "你在金蝶游乐场最喜欢玩的项目是？",
+            options: [
+                "A. 仙人微彩",
+                "B. 萌宠之王",
+                "C. 陆行鸟赛跑",
+                "D. 机遇任务有什么玩什么"
+            ]
+        },
+        {
+            text: "你觉得宠物最重要的特质是？",
+            options: [
+                "A. 忠诚。陪伴是最长情的告白",
+                "B. 聪明。能帮我打战场",
+                "C. 活泼。宠物跑过来，宠物跑过去",
+                "D. 神秘。异宠你崛起吧"
+            ]
+        }
+    ];
+
+    // ---------- 严格按照提供的评分规则: 每个题目 [A选项加分字母数组, B, C, D] ----------
+    const SCORE_RULES = [
+        [ // 第1题
+            ['a','b','c','d'],
+            ['e','f','g','h'],
+            ['i','j','k','l'],
+            ['m','n','o','p']
+        ],
+        [ // 第2题
+            ['d','e','i','m'],
+            ['c','g','l','p'],
+            ['a','h','j','n'],
+            ['b','f','k','o']
+        ],
+        [ // 第3题
+            ['a','i','j','k','l','n','p'],   // 3A: aijklnp
+            ['b','k'],                         // 3B: bk
+            ['c','d','f','h','o'],             // 3C: cdfho
+            ['e','g','m']                      // 3D: egm
+        ],
+        [ // 第4题
+            ['a'],                              // 4A: a
+            ['b','f','g','j','l','m','n','p'], // 4B: bfgjlmnp
+            ['c','d','e','k'],                 // 4C: cdek
+            ['h','i','o']                      // 4D: hio
+        ],
+        [ // 第5题
+            ['a','d','h','k'],                 // 5A: adhk
+            ['b','e','i','m'],                 // 5B: beim
+            ['c','f','j','n'],                 // 5C: cfjn
+            ['p','g','l','o']                  // 5D: pglo
+        ],
+        [ // 第6题
+            ['a','b','c','d'],                 // 6A: abcd
+            ['f','g','j','m'],                 // 6B: fgjm
+            ['e','h','k','n'],                 // 6C: ehkn
+            ['p','i','l','o']                  // 6D: pilo
+        ],
+        [ // 第7题
+            ['e','j','m'],                     // 7A: ejm
+            ['f','h','l'],                     // 7B: fhl
+            ['a','n','p'],                     // 7C: anp
+            ['b','c','d','g','i','k','o']      // 7D: bcdgiko
+        ],
+        [ // 第8题
+            ['a','c','l','m','n'],             // 8A: aclmn
+            ['d','i','g','k','o'],             // 8B: digko
+            ['b','f','h','j'],                 // 8C: bfhj
+            ['e','p']                          // 8D: ep
+        ],
+        [ // 第9题
+            ['a','c','h','l'],                 // 9A: achl
+            ['b','e','i','n'],                 // 9B: bein
+            ['p','f','j','m'],                 // 9C: pfjm
+            ['d','g','k','o']                  // 9D: dgko
+        ],
+        [ // 第10题
+            ['a','f','i','m'],                 // 10A: afim
+            ['c','g','j','n'],                 // 10B: cgjn
+            ['d','h','l','p'],                 // 10C: dhlp
+            ['e','k','b','o']                  // 10D: ekbo
+        ]
+    ];
+
+    // 全局状态
+    let currentStep = 0;          // 0~9 当前第几题(索引)
+    let answers = new Array(10).fill(null);  // 存储每道题选择的选项索引 0~3  (A->0,B->1,C->2,D->3)
+    let testStarted = false;       // 是否进入问卷模式
+    let resultShown = false;       // 是否已显示结果（结果区域可见，避免干扰）
+
+    // DOM 元素引用
+    const appContainer = document.getElementById("dynamic-content");
+
+    // ---------- 辅助函数 ----------
+    function render() {
+        if (!testStarted) {
+            renderStartScreen();
+        } else {
+            if (resultShown) {
+                renderResultScreen();
+            } else {
+                renderQuizScreen();
+            }
+        }
+    }
+
+    // 开始界面
+    function renderStartScreen() {
+        appContainer.innerHTML = `
+            <div class="card-panel start-screen">
+                <div class="ffxiv-icon">🐾✨</div>
+                <h1>🎮 测测最适合你的宠物！</h1>
+                <p>只有十道题库啵～</p>
+                <button class="btn btn-primary" id="startQuizBtn">🎲 开始测试 🎲</button>
+                <footer style="margin-top: 32px;">✨ 海德林的指引 ✨</footer>
+            </div>
+        `;
+        const startBtn = document.getElementById("startQuizBtn");
+        if (startBtn) startBtn.addEventListener("click", startQuiz);
+    }
+
+    // 开始问卷：重置所有数据
+    function startQuiz() {
+        testStarted = true;
+        resultShown = false;
+        currentStep = 0;
+        answers = new Array(10).fill(null);
+        render();
+    }
+
+    // 渲染问卷题目 (当前currentStep)
+    function renderQuizScreen() {
+        const q = QUESTIONS[currentStep];
+        const selectedIdx = answers[currentStep]; // null 或 0~3
+        const optionsHtml = q.options.map((opt, idx) => {
+            const checkedAttr = (selectedIdx === idx) ? 'checked' : '';
+            const displayText = opt;
+            return `
+                <div class="option-item" data-opt-index="${idx}">
+                    <div class="option-radio">
+                        <input type="radio" name="quizOption" value="${idx}" id="opt_${idx}" ${checkedAttr}>
+                        <label for="opt_${idx}">${displayText}</label>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        const totalAnswered = answers.filter(a => a !== null).length;
+        const allCompleted = totalAnswered === 10;
+
+        // 动态下一题按钮文字： 第十题（索引9）显示“最后一题 ▶”，其余显示“下一题 ▶”
+        const nextBtnText = (currentStep === 9) ? '最后一题 ▶' : '下一题 ▶';
+
+        const html = `
+            <div class="card-panel">
+                <div class="quiz-header">
+                    <span class="question-counter">第 ${currentStep+1} / 10 题</span>
+                    <span class="progress-txt">📋 已完成 ${totalAnswered} / 10</span>
+                </div>
+                <div class="question-text">${q.text}</div>
+                <div class="options-list" id="optionsList">
+                    ${optionsHtml}
+                </div>
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="prevBtn" ${currentStep === 0 ? 'disabled style="opacity:0.5;"' : ''}>◀ 上一题</button>
+                    <button class="btn btn-secondary" id="nextBtn">${nextBtnText}</button>
+                </div>
+                <div style="margin-top: 18px; text-align:center;">
+                    <button class="btn btn-primary" id="submitResultBtn" style="background:#a06e48;">✨ 查看匹配结果 ✨</button>
+                </div>
+                <div style="margin-top: 12px; text-align:center;">
+                    <button class="btn reset-btn" id="resetFromQuizBtn">🔄 重新测试</button>
+                </div>
+                ${!allCompleted ? '<div class="error-msg" style="margin-top:14px;">💡 答完所有题目再查看结果哦</div>' : ''}
+            </div>
+            <footer>🐾🌙 </footer>
+        `;
+        appContainer.innerHTML = html;
+
+        // 绑定radio变化事件
+        const radioInputs = document.querySelectorAll('input[name="quizOption"]');
+        radioInputs.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const val = parseInt(e.target.value);
+                if (!isNaN(val)) {
+                    answers[currentStep] = val;
+                    renderQuizScreen();
+                }
+            });
+        });
+
+        // 选项区域点击优化 (点击整个div也可选中)
+        const optionDivs = document.querySelectorAll('.option-item');
+        optionDivs.forEach(div => {
+            const idx = div.getAttribute('data-opt-index');
+            if (idx !== null) {
+                div.addEventListener('click', (e) => {
+                    if (e.target.tagName !== 'INPUT') {
+                        const radio = div.querySelector('input[type="radio"]');
+                        if (radio && !radio.checked) {
+                            radio.checked = true;
+                            const changeEvent = new Event('change', { bubbles: true });
+                            radio.dispatchEvent(changeEvent);
+                        }
+                    }
+                });
+            }
+        });
+
+        // 上一题
+        const prevBtn = document.getElementById('prevBtn');
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    renderQuizScreen();
+                }
+            });
+        }
+        // 下一题 / 最后一题 (行为保持不变：未到第10题时跳转，到第10题时只做校验)
+        const nextBtn = document.getElementById('nextBtn');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                if (currentStep < 9) {
+                    // 不是最后一题：跳转下一题
+                    currentStep++;
+                    renderQuizScreen();
+                } else {
+                    // 已经是第十题：点击时仅做验证（不改动题目，避免误解）
+                    if (answers[currentStep] === null) {
+                        alert("请先选择当前这题的答案～");
+                    } else {
+                        // 可选提示：所有题目已完成，可以直接点击“查看匹配结果”
+                        if (answers.every(a => a !== null)) {
+                            // 静默不做跳转，用户可继续点查看结果
+                        } else {
+                            alert("还有未答的题目，请用“上一题”补全或者直接点击查看匹配结果～");
+                        }
+                    }
+                }
+            });
+        }
+
+        // 查看结果按钮
+        const submitBtn = document.getElementById('submitResultBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', () => {
+                computeAndShowResult();
+            });
+        }
+
+        // 重置测试
+        const resetBtn = document.getElementById('resetFromQuizBtn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                resetFullTest();
+            });
+        }
+    }
+
+    // 计算分数并展示结果页面
+    function computeAndShowResult() {
+        const allAnswered = answers.every(a => a !== null);
+        if (!allAnswered) {
+            alert("还有未完成的题目！请先完成全部10道题再查看匹配结果～");
+            return;
+        }
+
+        let petScores = {};
+        const petLetters = Object.keys(PETS);
+        petLetters.forEach(letter => { petScores[letter] = 0; });
+
+        for (let i = 0; i < 10; i++) {
+            const answerIdx = answers[i];
+            const ruleForQ = SCORE_RULES[i];
+            const addLetters = ruleForQ[answerIdx];
+            if (addLetters && addLetters.length) {
+                for (let letter of addLetters) {
+                    if (petScores.hasOwnProperty(letter)) {
+                        petScores[letter] += 1;
+                    }
+                }
+            }
+        }
+
+        let maxScore = -1;
+        let topPets = [];
+        for (let [letter, score] of Object.entries(petScores)) {
+            if (score > maxScore) {
+                maxScore = score;
+                topPets = [letter];
+            } else if (score === maxScore) {
+                topPets.push(letter);
+            }
+        }
+
+        let finalLetter = topPets.length > 0 ? topPets[Math.floor(Math.random() * topPets.length)] : 'a';
+        let matchedPetName = PETS[finalLetter] || "神秘生物";
+
+        resultShown = true;
+        renderResultScreen(matchedPetName, petScores);
+    }
+
+    // 渲染结果展示界面（带重新测试按钮）
+    function renderResultScreen(matchedPetName = null, scoresMap = null) {
+        let finalPet = matchedPetName;
+        if (!finalPet) {
+            const allAnswered = answers.every(a => a !== null);
+            if (!allAnswered) {
+                alert("请先完成全部题目～");
+                resultShown = false;
+                renderQuizScreen();
+                return;
+            }
+            let petScoresTemp = {};
+            Object.keys(PETS).forEach(l => { petScoresTemp[l] = 0; });
+            for (let i = 0; i < 10; i++) {
+                const ruleForQ = SCORE_RULES[i];
+                const addLetters = ruleForQ[answers[i]];
+                if (addLetters) {
+                    for (let l of addLetters) if (petScoresTemp[l] !== undefined) petScoresTemp[l] += 1;
+                }
+            }
+            let maxV = -1, top = [];
+            for (let [k, v] of Object.entries(petScoresTemp)) {
+                if (v > maxV) { maxV = v; top = [k]; }
+                else if (v === maxV) top.push(k);
+            }
+            const chooseLetter = top.length ? top[Math.floor(Math.random() * top.length)] : 'a';
+            finalPet = PETS[chooseLetter];
+        }
+
+        appContainer.innerHTML = `
+            <div class="card-panel" style="text-align:center;">
+                <div class="ffxiv-icon">🐣🎁</div>
+                <h2 style="color:#5f3a28;">✨ 结果 ✨</h2>
+                <div class="result-area">
+                    <p style="font-weight:500;">它是——</p>
+                    <div class="result-pet">🐾 ${finalPet} 🐾</div>
+                    <p style="background:#fff0dd; border-radius:28px; padding: 8px; margin-top:14px;">在艾欧泽亚，它会是你最贴心的宠物！</p>
+                </div>
+                <div style="margin: 28px 0 12px;">
+                    <button class="btn btn-primary" id="restartTestBtn">🔄 重新测试</button>
+                    <button class="btn btn-secondary" id="backToQuizBtn" style="margin-left:12px;">📋 返回问卷修改</button>
+                </div>
+                <footer>⭐ 再测一次，或许结果不同 ⭐</footer>
+            </div>
+        `;
+        const restartBtn = document.getElementById("restartTestBtn");
+        if (restartBtn) restartBtn.addEventListener("click", () => { resetFullTest(); });
+        const backBtn = document.getElementById("backToQuizBtn");
+        if (backBtn) backBtn.addEventListener("click", () => {
+            resultShown = false;
+            renderQuizScreen();
+        });
+    }
+
+    // 完全重置测试：回到开始界面
+    function resetFullTest() {
+        testStarted = false;
+        resultShown = false;
+        currentStep = 0;
+        answers = new Array(10).fill(null);
+        render();
+    }
+
+    // 初始渲染开始界面
+    render();
+</script>
+</body>
+</html>
